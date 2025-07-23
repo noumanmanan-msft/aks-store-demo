@@ -1,0 +1,41 @@
+apiVersion: karpenter.azure.com/v1beta1
+kind: AKSNodeClass
+metadata:
+  name: default-azurelinux
+  annotations:
+    kubernetes.io/description: "General purpose AKSNodeClass for running Azure Linux nodes"
+spec:
+  imageFamily: AzureLinux
+---
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: arm-nodepool
+spec:
+  weight: 10
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 1s
+  template:
+    spec:
+      nodeClassRef:
+        group: karpenter.azure.com
+        kind: AKSNodeClass
+        name: default-azurelinux
+      requirements:
+      - key: kubernetes.io/arch
+        operator: In
+        values:
+        - arm64
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+      - key: karpenter.sh/capacity-type
+        operator: In
+        values:
+        - on-demand
+      - key: karpenter.azure.com/sku-family
+        operator: In
+        values:
+        - D
